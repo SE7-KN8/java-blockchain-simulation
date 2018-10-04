@@ -23,9 +23,9 @@ public class Block {
 
 	//Body
 	private String dataRootHash;
-	private List<BlockData> blockData;
+	private List<? extends BlockData> blockData;
 
-	public Block(String prevHash, List<BlockData> blockData) {
+	public Block(String prevHash, List<? extends BlockData> blockData) {
 		this.prevHash = prevHash;
 		this.timestamp = sdf.format(new Date());
 		this.nonce = 0;
@@ -39,17 +39,12 @@ public class Block {
 		this.dataRootHash = sha256.hashString(dataRootHashBuilder.toString(), StandardCharsets.UTF_8).toString();
 	}
 
-	private String generateCurrentBlockHash(int difficulty){
+	private String generateCurrentBlockHash(int difficulty) {
 		String currentBlockHash;
-		StringBuilder difficultyBuilder = new StringBuilder();
-
-		for (int i = 0; i < difficulty; i++) {
-			difficultyBuilder.append("0");
-		}
 
 		while (true) {
 			String hash = sha256.hashString(prevHash + timestamp + nonce + dataRootHash, StandardCharsets.UTF_8).toString();
-			if (hash.startsWith(difficultyBuilder.toString())) {
+			if (hash.startsWith("0".repeat(difficulty))) {
 				currentBlockHash = hash;
 				break;
 			}
@@ -82,7 +77,7 @@ public class Block {
 		return dataRootHash;
 	}
 
-	public List<BlockData> getBlockData() {
+	public List<? extends BlockData> getBlockData() {
 		return List.copyOf(blockData);
 	}
 }
