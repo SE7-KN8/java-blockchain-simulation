@@ -1,5 +1,9 @@
 package com.github.se7kn8.blockchain_simulation.blockchain;
 
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,20 +13,13 @@ public class Blockchain {
 		public WrongHashException() {
 			super();
 		}
+
 		public WrongHashException(String message) {
 			super(message);
 		}
 	}
 
-	public static class BlockNotMinedException extends IllegalArgumentException {
-		public BlockNotMinedException() {
-			super();
-		}
-
-		public BlockNotMinedException(String message) {
-			super(message);
-		}
-	}
+	private static final HashFunction sha256 = Hashing.sha256();
 
 	private List<Block> blocks;
 	private int difficulty;
@@ -44,11 +41,9 @@ public class Blockchain {
 			block.mineBlock(difficulty);
 		}
 
-		if (block.getHash().startsWith("0".repeat(difficulty))) {
-			blocks.add(block);
-		} else {
-			throw new BlockNotMinedException();
-		}
+		validateBlockHash(block);
+
+		blocks.add(block);
 	}
 
 	public List<Block> getBlocks() {
@@ -58,4 +53,31 @@ public class Blockchain {
 	public int getDifficulty() {
 		return difficulty;
 	}
+
+	public boolean isValid() {
+		for (int i = 0; i < blocks.size(); i++) {
+			if (i == 0) {
+				continue;
+			}
+			var block = blocks.get(i);
+			try {
+				validateBlockHash(block);
+			} catch (WrongHashException e) {
+				return false;
+			}
+			if (!block.getPrevHash().equals(blocks.get(i - 1).getHash())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void validateBlockHash(Block block) {
+		if (!block.getHash().startsWith("0".repeat(difficulty))) {
+			throw new WrongHashException("Hash has to start with: " + "0".repeat(difficulty));
+		} else if (!block.getHash().equals(sha256.hashString(block.getPrevHash() + block.getTimestamp() + block.getNonce() + block.getDataRootHash(), StandardCharsets.UTF_8).toString())) { //TODO validate data root hash
+			throw new WrongHashException("Hash does not match block values");
+		}
+	}
+
 }
