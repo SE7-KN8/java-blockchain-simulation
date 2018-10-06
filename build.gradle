@@ -22,6 +22,8 @@ targetCompatibility = 11
 
 dependencies {
     implementation 'com.google.guava:guava:26.0-jre'
+    implementation 'io.javalin:javalin:2.2.0'
+    implementation 'org.slf4j:slf4j-simple:1.7.25'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.1.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.1.0'
