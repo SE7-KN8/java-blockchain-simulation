@@ -21,7 +21,7 @@ public class BlockchainWebServer {
 		this.app = Javalin.create();
 		this.blockchain = new Blockchain(4, "genesis", "block", "data");
 		//TODO just for tests
-		for(int i = 0; i< 40; i++){
+		for (int i = 0; i < 40; i++) {
 			blockchain.addBlock(new Block(blockchain.getBlocks().get(blockchain.getBlocks().size() - 1).getHash(), List.of()), false);
 		}
 	}
@@ -30,9 +30,14 @@ public class BlockchainWebServer {
 		this.app.enableStaticFiles("static-files");
 		this.app.start();
 		this.app.get("blockchain", this::blockchainEndpoint);
+		this.app.error(404, this::handle404);
+		this.app.error(500, this::handle500);
 	}
 
 	private String getSite(String title, String contentPath) throws IOException, URISyntaxException {
+		var head = new Object() {
+			String head;
+		};
 		var header = new Object() {
 			String header;
 		};
@@ -43,20 +48,25 @@ public class BlockchainWebServer {
 			String footer;
 		};
 
-		processResource("templates/header.html", path -> {
-			header.header = Files.readString(path);
-		});
-		processResource(contentPath, path -> {
-			content.content = Files.readString(path);
-		});
-		processResource("templates/footer.html", path -> {
-			footer.footer = Files.readString(path);
-		});
+		processResource("templates/head.html", path -> head.head = Files.readString(path));
+		processResource("templates/header.html", path -> header.header = Files.readString(path));
+		processResource("templates/footer.html", path -> footer.footer = Files.readString(path));
+		processResource(contentPath, path -> content.content = Files.readString(path));
 
 		return content.content
 				.replace("<!-- __footer__ -->", footer.footer)
 				.replace("<!-- __header__ -->", header.header)
+				.replace("<!-- __head__ -->", head.head)
 				.replace("<!-- __title__ -->", title);
+	}
+
+	private String getErrorSite(String title, String errorTitle, String errorDesc) throws IOException, URISyntaxException {
+		String site = getSite(title,"sites/error.html");
+
+
+		return site
+				.replace("<!-- __error_title__ -->", errorTitle)
+				.replace("<!-- __error_desc__ -->", errorDesc);
 	}
 
 	private interface IOConsumer<T> {
@@ -116,6 +126,22 @@ public class BlockchainWebServer {
 		}
 
 		ctx.html(html.replace("<!-- __rows__ -->", rowsHtml.rows));
+	}
+
+	private void handle404(Context ctx) {
+		try {
+			ctx.html(getErrorSite("404 Error", "HTTP Error 404", "The requested page doesn't exists"));
+		} catch (Exception e) {
+			throw new IllegalStateException("Error while creating 404 page", e);
+		}
+	}
+
+	private void handle500(Context ctx) {
+		try {
+			ctx.html(getErrorSite("500 Error", "HTTP Error 500", "There was an error while loading the requested site"));
+		} catch (Exception e) {
+			throw new IllegalStateException("Error while creating 500 page", e);
+		}
 	}
 
 }
