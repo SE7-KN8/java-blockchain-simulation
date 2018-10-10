@@ -113,13 +113,15 @@ public class BlockchainWebServer {
 					break;
 				}
 				var currentBlock = blockchain.getBlocks().get(block);
+
 				blocksBuilder.append(blocksHtml.blocks
-						.replace("<!-- __block_name__ -->", "Block: " + (block + 1))
+						.replace("<!-- __block_name__ -->", block == 0 ? "Genesis block" : "Block: " + block)
 						.replace("<!-- __block_hash__ -->", currentBlock.getHash().toUpperCase())
 						.replace("<!-- __block_previous_hash__ -->", currentBlock.getPrevHash().toUpperCase())
 						.replace("<!-- __block_nonce__ -->", String.valueOf(currentBlock.getNonce()))
 						.replace("<!-- __block_timestamp__ -->", currentBlock.getTimestamp().toUpperCase())
-						.replace("<!-- __block_data_root_hash__ -->", currentBlock.getDataRootHash().toUpperCase()));
+						.replace("<!-- __block_data_root_hash__ -->", currentBlock.getDataRootHash().toUpperCase())
+						.replace("<!-- __block_id__ -->", String.valueOf(block)));
 				block++;
 			}
 			rowsHtml.rows = rowsHtml.rows.replaceFirst("<!-- __blocks__ -->", blocksBuilder.toString());
