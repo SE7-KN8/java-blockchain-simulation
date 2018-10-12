@@ -30,6 +30,7 @@ public class BlockchainWebServer {
 		this.app.enableStaticFiles("static-files");
 		this.app.start();
 		this.app.get("blockchain", this::blockchainEndpoint);
+		this.app.get("block-info/:block_id", this::blockInfoEndpoint);
 		this.app.error(404, this::handle404);
 		this.app.error(500, this::handle500);
 	}
@@ -61,7 +62,7 @@ public class BlockchainWebServer {
 	}
 
 	private String getErrorSite(String title, String errorTitle, String errorDesc) throws IOException, URISyntaxException {
-		String site = getSite(title,"sites/error.html");
+		String site = getSite(title, "sites/error.html");
 
 
 		return site
@@ -112,22 +113,45 @@ public class BlockchainWebServer {
 				if (block >= blockchain.getBlocks().size()) {
 					break;
 				}
-				var currentBlock = blockchain.getBlocks().get(block);
+				blocksBuilder.append(replaceBlockInfo(blocksHtml.blocks, block));
 
-				blocksBuilder.append(blocksHtml.blocks
-						.replace("<!-- __block_name__ -->", block == 0 ? "Genesis block" : "Block: " + block)
-						.replace("<!-- __block_hash__ -->", currentBlock.getHash().toUpperCase())
-						.replace("<!-- __block_previous_hash__ -->", currentBlock.getPrevHash().toUpperCase())
-						.replace("<!-- __block_nonce__ -->", String.valueOf(currentBlock.getNonce()))
-						.replace("<!-- __block_timestamp__ -->", currentBlock.getTimestamp().toUpperCase())
-						.replace("<!-- __block_data_root_hash__ -->", currentBlock.getDataRootHash().toUpperCase())
-						.replace("<!-- __block_id__ -->", String.valueOf(block)));
 				block++;
 			}
 			rowsHtml.rows = rowsHtml.rows.replaceFirst("<!-- __blocks__ -->", blocksBuilder.toString());
 		}
 
 		ctx.html(html.replace("<!-- __rows__ -->", rowsHtml.rows));
+	}
+
+	private void blockInfoEndpoint(Context ctx) throws IOException, URISyntaxException {
+		int block = Integer.valueOf(ctx.pathParam("block_id"));
+		String blockName = block == 0 ? "Genesis block" : "Block " + block;
+
+		String site = getSite(blockName, "sites/block-info.html")
+				.replace("<!-- __previous_block_link__ -->", "/block-info/" + (block - 1))
+				.replace("<!-- __next_block_link__ -->", "/block-info/" + (block + 1));
+
+		ctx.html(replaceBlockInfo(site, block));
+	}
+
+	private String replaceBlockInfo(String html, int blockID) {
+		if (blockID >= this.blockchain.getBlocks().size() || blockID < 0) {
+			return html.replace("<!-- __block_name__ -->", "The requested block doesn't exists.")
+					.replace("<!-- __block_hash__ -->", "---")
+					.replace("<!-- __block_previous_hash__ -->", "---")
+					.replace("<!-- __block_nonce__ -->", "---")
+					.replace("<!-- __block_timestamp__ -->", "---")
+					.replace("<!-- __block_data_root_hash__ -->", "---")
+					.replace("<!-- __block_id__ -->", String.valueOf(blockID));
+		}
+		Block block = this.blockchain.getBlocks().get(blockID);
+		return html.replace("<!-- __block_name__ -->", blockID == 0 ? "Genesis block" : "Block " + blockID)
+				.replace("<!-- __block_hash__ -->", block.getHash().toUpperCase())
+				.replace("<!-- __block_previous_hash__ -->", block.getPrevHash().toUpperCase())
+				.replace("<!-- __block_nonce__ -->", String.valueOf(block.getNonce()))
+				.replace("<!-- __block_timestamp__ -->", block.getTimestamp().toUpperCase())
+				.replace("<!-- __block_data_root_hash__ -->", block.getDataRootHash().toUpperCase())
+				.replace("<!-- __block_id__ -->", String.valueOf(blockID));
 	}
 
 	private void handle404(Context ctx) {
