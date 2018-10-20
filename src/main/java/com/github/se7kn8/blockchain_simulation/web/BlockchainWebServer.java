@@ -2,6 +2,7 @@ package com.github.se7kn8.blockchain_simulation.web;
 
 import com.github.se7kn8.blockchain_simulation.blockchain.Block;
 import com.github.se7kn8.blockchain_simulation.blockchain.Blockchain;
+import com.github.se7kn8.blockchain_simulation.command.CommandHandler;
 import io.javalin.Context;
 import io.javalin.Javalin;
 
@@ -24,6 +25,10 @@ public class BlockchainWebServer {
 		for (int i = 0; i < 40; i++) {
 			blockchain.addBlock(new Block(blockchain.getBlocks().get(blockchain.getBlocks().size() - 1).getHash(), List.of()), false);
 		}
+		CommandHandler.getInstance().addStopHandler("webserver", c -> {
+			c.message("Stopping webserver");
+			this.app.stop();
+		});
 	}
 
 	public void start() {
