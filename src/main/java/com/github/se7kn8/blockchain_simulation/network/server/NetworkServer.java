@@ -1,5 +1,6 @@
-package com.github.se7kn8.blockchain_simulation.network;
+package com.github.se7kn8.blockchain_simulation.network.server;
 
+import com.github.se7kn8.blockchain_simulation.command.CommandHandler;
 import com.github.se7kn8.blockchain_simulation.network.packages.Packet;
 import com.github.se7kn8.blockchain_simulation.network.packages.TestPacket;
 import com.github.se7kn8.blockchain_simulation.util.IOThread;
@@ -29,7 +30,7 @@ public class NetworkServer extends IOThread {
 			new Thread(() -> {
 
 				try {
-					while(true){
+					while (true) {
 						NetworkServer.this.broadcastPacket(new TestPacket());
 						Thread.sleep(1000);
 					}
@@ -73,8 +74,15 @@ public class NetworkServer extends IOThread {
 		this.connectedClients.remove(client);
 	}
 
-	public void broadcastPacket(Packet packet) {
+	public synchronized void broadcastPacket(Packet packet) {
 		this.connectedClients.stream().filter(client -> !client.getSocket().isClosed()).forEach(client -> client.sendPacket(packet));
+	}
+
+	public void registerCommands() {
+		CommandHandler.getInstance().addStopHandler("network-server", s -> {
+			s.message("Stopping server");
+			stopServer();
+		});
 	}
 
 }

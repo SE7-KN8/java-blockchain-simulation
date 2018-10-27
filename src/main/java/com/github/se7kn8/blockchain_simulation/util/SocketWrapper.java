@@ -1,11 +1,19 @@
 package com.github.se7kn8.blockchain_simulation.util;
 
+import com.github.se7kn8.blockchain_simulation.network.packages.ConnectPacket;
 import com.github.se7kn8.blockchain_simulation.network.packages.Packet;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public abstract class SocketWrapper implements Closeable {
 
@@ -26,6 +34,7 @@ public abstract class SocketWrapper implements Closeable {
 
 		@Override
 		public void handleException(Exception e) {
+			e.printStackTrace();
 			closeConnection();
 		}
 	}
@@ -38,7 +47,16 @@ public abstract class SocketWrapper implements Closeable {
 			while (!this.isInterrupted()) {
 				Object o = input.readObject();
 				if (o instanceof Packet) {
-					handlePacket(((Packet) o));
+					if (!customPacketHandlers.getOrDefault(((Packet) o).getClass(), SocketWrapper.this::handlePacket).apply((Packet) o)) {
+						SocketWrapper.this.sendPacket(new ConnectPacket(ConnectPacket.CONNECTION_TERMINATED, "Invalid packet or invalid packet state!"));
+
+						while (!SocketWrapper.this.getSocket().isClosed() && SocketWrapper.this.getPacketsToSend().peek() == null && !SocketWrapper.this.outputThread.isInterrupted()) {
+							Thread.onSpinWait();
+						}
+						closeConnection();
+
+					}
+
 				} else {
 					throw new IllegalStateException("Received packet is not an instance of " + Packet.class.getSimpleName());
 				}
@@ -61,10 +79,16 @@ public abstract class SocketWrapper implements Closeable {
 	private ObjectOutputStream output;
 	private ObjectInputStream input;
 
-	private static int counter = 0;
+	private Map<Class<? extends Packet>, Function<Packet, Boolean>> customPacketHandlers = new ConcurrentHashMap<>();
+
+	private static AtomicInteger counter = new AtomicInteger(0);
 
 	public SocketWrapper(Socket socket) {
 		this.socket = socket;
+	}
+
+	public void start(){
+		int number = counter.getAndIncrement();
 
 		try {
 			SocketWrapper.this.output = new ObjectOutputStream(SocketWrapper.this.socket.getOutputStream());
@@ -77,12 +101,11 @@ public abstract class SocketWrapper implements Closeable {
 		outputThread = new Thread(new OutputThread());
 		inputThread = new Thread(new InputThread());
 
-		outputThread.setName("socket-wrapper-" + counter + "-output");
-		inputThread.setName("socket-wrapper-" + counter + "-input");
+		outputThread.setName("socket-wrapper-" + number + "-output");
+		inputThread.setName("socket-wrapper-" + number + "-input");
 
 		outputThread.start();
 		inputThread.start();
-		counter++;
 	}
 
 	public void sendPacket(Packet packet) {
@@ -99,7 +122,7 @@ public abstract class SocketWrapper implements Closeable {
 		}
 	}
 
-	public abstract void handlePacket(Packet packet);
+	public abstract boolean handlePacket(Packet packet);
 
 	@Override
 	public void close() {
@@ -112,5 +135,12 @@ public abstract class SocketWrapper implements Closeable {
 
 	public Socket getSocket() {
 		return socket;
+	}
+
+	public void registerCustomPacketHandler(Class<? extends Packet> packetClass, Function<Packet, Boolean> handler) {
+		if (customPacketHandlers.keySet().contains(packetClass)) {
+			throw new IllegalArgumentException("Custom packet handle for packet '" + packetClass.getSimpleName() + "' is already defined!");
+		}
+		customPacketHandlers.put(packetClass, handler);
 	}
 }

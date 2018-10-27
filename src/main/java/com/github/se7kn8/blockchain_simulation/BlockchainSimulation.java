@@ -1,8 +1,8 @@
 package com.github.se7kn8.blockchain_simulation;
 
 import com.github.se7kn8.blockchain_simulation.command.ConsoleReader;
-import com.github.se7kn8.blockchain_simulation.network.NetworkClient;
-import com.github.se7kn8.blockchain_simulation.network.NetworkServer;
+import com.github.se7kn8.blockchain_simulation.network.client.NetworkClient;
+import com.github.se7kn8.blockchain_simulation.network.server.NetworkServer;
 import com.github.se7kn8.blockchain_simulation.web.BlockchainWebServer;
 
 public class BlockchainSimulation {

@@ -1,4 +1,4 @@
-package com.github.se7kn8.blockchain_simulation.network;
+package com.github.se7kn8.blockchain_simulation.network.server;
 
 import com.github.se7kn8.blockchain_simulation.network.packages.ConnectPacket;
 import com.github.se7kn8.blockchain_simulation.network.packages.Packet;
@@ -17,23 +17,33 @@ public class ServerClientHandler extends SocketWrapper {
 		System.out.println("Connected to client with remote ip " + client.getInetAddress().getCanonicalHostName() + " and port " + client.getPort());
 		this.server = server;
 		this.server.addClient(this);
+		this.registerCustomPacketHandler(ConnectPacket.class, this::handleConnectPacket);
+		this.start();
 	}
 
 	@Override
-	public void handlePacket(Packet packet) {
+	public boolean handlePacket(Packet packet) {
 		if (!connected) {
-			if (packet instanceof ConnectPacket && ((ConnectPacket) packet).getState() == ConnectPacket.TRY_TO_CONNECT) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean handleConnectPacket(Packet p) {
+		if (connected) {
+			return false;
+		} else {
+			ConnectPacket packet = (ConnectPacket) p;
+
+			if (packet.getState() == ConnectPacket.TRY_TO_CONNECT) {
 				connected = true;
 				sendPacket(new ConnectPacket(ConnectPacket.SUCCESSFUL_CONNECTED));
 			} else {
-				sendPacket(new ConnectPacket(ConnectPacket.CONNECTION_TERMINATED, "Invalid packet or invalid packet state!"));
-
-				while (!getSocket().isClosed() && getPacketsToSend().peek() == null) {
-					Thread.onSpinWait();
-				}
-				close();
+				return false;
 			}
 		}
+		return true;
 	}
 
 	@Override
