@@ -12,7 +12,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public abstract class SocketWrapper implements Closeable {
@@ -69,7 +68,6 @@ public abstract class SocketWrapper implements Closeable {
 		}
 	}
 
-
 	private Socket socket;
 	private Queue<Packet> packetsToSend = new ConcurrentLinkedQueue<>();
 
@@ -83,12 +81,34 @@ public abstract class SocketWrapper implements Closeable {
 
 	private static AtomicInteger counter = new AtomicInteger(0);
 
+	//Only for sockets that are created via server.accept();
 	public SocketWrapper(Socket socket) {
 		this.socket = socket;
+		this.createNewSocket = false;
 	}
 
-	public void start(){
+	private String host;
+	private int port;
+	private final boolean createNewSocket;
+
+	//For a new connection
+	public SocketWrapper(String host, int port) {
+		this.host = host;
+		this.port = port;
+		this.createNewSocket = true;
+	}
+
+	public void start() {
 		int number = counter.getAndIncrement();
+
+		if (createNewSocket) {
+			try {
+				this.socket = new Socket(host, port);
+			} catch (Exception e) {
+				close();
+				throw new IllegalStateException("Failed to create socket");
+			}
+		}
 
 		try {
 			SocketWrapper.this.output = new ObjectOutputStream(SocketWrapper.this.socket.getOutputStream());
@@ -114,9 +134,15 @@ public abstract class SocketWrapper implements Closeable {
 
 	protected void closeConnection() {
 		try {
-			socket.close();
-			outputThread.interrupt();
-			inputThread.interrupt();
+			if (socket != null) {
+				socket.close();
+			}
+			if (outputThread != null) {
+				outputThread.interrupt();
+			}
+			if (inputThread != null) {
+				inputThread.interrupt();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

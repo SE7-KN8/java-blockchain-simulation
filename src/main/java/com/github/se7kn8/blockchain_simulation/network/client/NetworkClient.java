@@ -50,11 +50,12 @@ public class NetworkClient {
 
 	}
 
-	private void connect(String hostname, int port, CommandSender sender) throws Exception {
+	private synchronized void connect(String hostname, int port, CommandSender sender) throws Exception {
 		if (!connected) {
 			if (wrapper == null) {
 				connected = true;
 				wrapper = new NetworkClientSocketWrapper(hostname, port, () -> connected = false);
+				System.out.println("Connected");
 			} else {
 				throw new IllegalStateException("Connected is 'false' but the wrapper is not null. Try to restart the program");
 			}
@@ -63,7 +64,7 @@ public class NetworkClient {
 		}
 	}
 
-	private void disconnected(CommandSender sender) {
+	private synchronized void disconnected(CommandSender sender) {
 		if (!connected) {
 			sender.message("Not connected! Connect to a node via 'connect'");
 		} else {
