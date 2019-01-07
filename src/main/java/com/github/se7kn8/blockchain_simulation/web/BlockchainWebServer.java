@@ -18,8 +18,9 @@ public class BlockchainWebServer {
 	private Javalin app;
 	private Blockchain blockchain;
 
-	public BlockchainWebServer() {
+	public BlockchainWebServer(int wsPort) {
 		this.app = Javalin.create();
+		this.app.port(wsPort);
 		this.blockchain = new Blockchain(4, "genesis", "block", "data");
 		//TODO just for tests
 		for (int i = 0; i < 40; i++) {

@@ -22,13 +22,13 @@ public class NetworkServer extends IOThread {
 
 	public void start(int port) {
 		try {
+			registerCommands();
 			socket = new ServerSocket(port);
 			serverThread = new Thread(this);
 			serverThread.setName("Server thread");
 			serverThread.start();
 
 			new Thread(() -> {
-
 				try {
 					while (true) {
 						NetworkServer.this.broadcastPacket(new TestPacket());

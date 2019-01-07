@@ -31,6 +31,7 @@ public class CommandHandler {
 		dispatcher.register(LiteralArgumentBuilder.<CommandSender>literal("stop").executes(c -> {
 			c.getSource().message("stop <module>");
 			c.getSource().message("Available modules are: " + registeredStopHandlers.keySet().toString());
+			c.getSource().message("'exit' is equal to 'stop all'");
 			return 1;
 		}));
 		dispatcher.register(LiteralArgumentBuilder.<CommandSender>literal("stop").then(LiteralArgumentBuilder.<CommandSender>literal("all").executes(c -> {
@@ -44,9 +45,17 @@ public class CommandHandler {
 		})));
 		dispatcher.register(LiteralArgumentBuilder.<CommandSender>literal("exit").executes(c -> {
 			c.getSource().message("Stopping the program");
+			dispatcher.execute("stop all", c.getSource());
 			return 1;
 		}));
-		registeredStopHandlers.put("all", null);
+		registeredStopHandlers.put("all", sender -> {
+			for (String stopHandler : registeredStopHandlers.keySet()) {
+				if (!stopHandler.equals("all")) {
+					registeredStopHandlers.get(stopHandler).accept(sender);
+				}
+			}
+			System.exit(0);
+		});
 	}
 
 	public void registerCommand(LiteralArgumentBuilder<CommandSender> builder) {
