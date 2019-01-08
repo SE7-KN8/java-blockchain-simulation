@@ -1,6 +1,6 @@
 package com.github.se7kn8.blockchain_simulation.network.packages;
 
-public class ConnectPacket implements Packet {
+public class ConnectPacket extends Packet {
 	private static final long serialVersionUID = 1;
 
 	private final int STATE;

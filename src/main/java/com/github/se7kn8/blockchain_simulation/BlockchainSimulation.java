@@ -31,9 +31,13 @@ public class BlockchainSimulation {
 		reader.start();
 		BlockchainWebServer webServer = new BlockchainWebServer(wsPort);
 		webServer.start();
-		new NetworkClient().registerCommands();
-		NetworkServer server = new NetworkServer();
-		server.start(port);
+		NetworkServer localServer = new NetworkServer();
+		NetworkClient localClient = new NetworkClient(localServer);
+
+		localClient.registerCommands();
+		localServer.registerCommands();
+
+		localServer.start(port);
 	}
 
 	private static int checkIfPort(String arg) {

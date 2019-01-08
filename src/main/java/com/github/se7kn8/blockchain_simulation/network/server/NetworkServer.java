@@ -1,9 +1,12 @@
 package com.github.se7kn8.blockchain_simulation.network.server;
 
 import com.github.se7kn8.blockchain_simulation.command.CommandHandler;
+import com.github.se7kn8.blockchain_simulation.command.CommandSender;
+import com.github.se7kn8.blockchain_simulation.network.client.NetworkClientSocketWrapper;
 import com.github.se7kn8.blockchain_simulation.network.packages.Packet;
 import com.github.se7kn8.blockchain_simulation.network.packages.TestPacket;
 import com.github.se7kn8.blockchain_simulation.util.IOThread;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import java.net.ServerSocket;
 import java.util.HashSet;
@@ -16,13 +19,13 @@ public class NetworkServer extends IOThread {
 	private boolean started;
 	private ServerSocket socket;
 	private Thread serverThread;
+	private NetworkClientSocketWrapper localClient;
 	private Set<ServerClientHandler> connectedClients = new HashSet<>();
 
 	private Executor executor = Executors.newCachedThreadPool();
 
 	public void start(int port) {
 		try {
-			registerCommands();
 			socket = new ServerSocket(port);
 			serverThread = new Thread(this);
 			serverThread.setName("Server thread");
@@ -38,7 +41,7 @@ public class NetworkServer extends IOThread {
 					e.printStackTrace();
 				}
 
-			}).start();
+			})/*.start()*/;
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -54,7 +57,7 @@ public class NetworkServer extends IOThread {
 
 	@Override
 	public void handleException(Exception e) {
-		e.printStackTrace();
+		throw new RuntimeException("Error while server run!", e);
 	}
 
 	public void stopServer() {
@@ -78,11 +81,26 @@ public class NetworkServer extends IOThread {
 		this.connectedClients.stream().filter(client -> !client.getSocket().isClosed()).forEach(client -> client.sendPacket(packet));
 	}
 
+	public Set<ServerClientHandler> getConnectedClients() {
+		return connectedClients;
+	}
+
 	public void registerCommands() {
 		CommandHandler.getInstance().addStopHandler("network-server", s -> {
 			s.message("Stopping server");
 			stopServer();
 		});
+		CommandHandler.getInstance().registerCommand(LiteralArgumentBuilder.<CommandSender>literal("send-test-packet-server").executes(c -> {
+			broadcastPacket(new TestPacket());
+			return 1;
+		}));
 	}
 
+	public void setLocalClient(NetworkClientSocketWrapper localClient) {
+		this.localClient = localClient;
+	}
+
+	public NetworkClientSocketWrapper getLocalClient() {
+		return localClient;
+	}
 }

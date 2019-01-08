@@ -33,11 +33,10 @@ public abstract class SocketWrapper implements Closeable {
 
 		@Override
 		public void handleException(Exception e) {
-			e.printStackTrace();
 			closeConnection();
+			throw new RuntimeException("Error while sending packet from " + socket.getInetAddress().toString() + ". Connection has been terminated", e);
 		}
 	}
-
 
 	private class InputThread extends IOThread {
 

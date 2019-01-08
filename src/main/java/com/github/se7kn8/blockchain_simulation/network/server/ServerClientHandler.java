@@ -2,6 +2,7 @@ package com.github.se7kn8.blockchain_simulation.network.server;
 
 import com.github.se7kn8.blockchain_simulation.network.packages.ConnectPacket;
 import com.github.se7kn8.blockchain_simulation.network.packages.Packet;
+import com.github.se7kn8.blockchain_simulation.util.IDHandler;
 import com.github.se7kn8.blockchain_simulation.util.SocketWrapper;
 
 import java.net.Socket;
@@ -14,7 +15,7 @@ public class ServerClientHandler extends SocketWrapper {
 
 	public ServerClientHandler(Socket client, NetworkServer server) {
 		super(client);
-		System.out.println("Connected to client with remote ip " + client.getInetAddress().getCanonicalHostName() + " and port " + client.getPort());
+		System.out.println("[ServerClientHandler] Connected to client with remote ip " + client.getInetAddress().getCanonicalHostName() + " and port " + client.getPort());
 		this.server = server;
 		this.server.addClient(this);
 		this.registerCustomPacketHandler(ConnectPacket.class, this::handleConnectPacket);
@@ -25,6 +26,26 @@ public class ServerClientHandler extends SocketWrapper {
 	public boolean handlePacket(Packet packet) {
 		if (!connected) {
 			return false;
+		}
+		//TODO just for tests
+		System.out.println("[ServerClientHandler] Received packet: " + packet);
+		System.out.println("[ServerClientHandler] Broadcast packet " + packet.getClass() + " to all clients");
+		server.getConnectedClients().forEach(serverClientHandler -> {
+			if (serverClientHandler != this) {
+				serverClientHandler.sendPacket(packet);
+			}
+		});
+		if (!packet.getSender().equals(IDHandler.PROGRAMM_ID)) {
+			if (server.getLocalClient() != null) {
+				if (server.getLocalClient().isConnected()) {
+					System.out.println("[ServerClientHandler] Broadcast packet to local client");
+					server.getLocalClient().sendPacket(packet);
+				}
+			} else {
+				System.err.println("[ServerClientHandler] Can't broadcast packet to local client, because the client is not connect");
+			}
+		} else {
+			System.out.println("[ServerClientHandler] Skipped packet to prevent packet loop");
 		}
 
 		return true;

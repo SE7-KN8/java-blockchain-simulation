@@ -2,12 +2,17 @@ package com.github.se7kn8.blockchain_simulation.network.client;
 
 import com.github.se7kn8.blockchain_simulation.network.packages.ConnectPacket;
 import com.github.se7kn8.blockchain_simulation.network.packages.Packet;
+import com.github.se7kn8.blockchain_simulation.network.server.NetworkServer;
+import com.github.se7kn8.blockchain_simulation.util.IDHandler;
 import com.github.se7kn8.blockchain_simulation.util.SocketWrapper;
+
+import java.util.UUID;
 
 public class NetworkClientSocketWrapper extends SocketWrapper {
 
 	private boolean connected = false;
 	private Runnable disconnectHandler;
+	private NetworkServer server;
 
 	public NetworkClientSocketWrapper(String host, int ip, Runnable disconnectHandler) {
 		super(host, ip);
@@ -32,7 +37,13 @@ public class NetworkClientSocketWrapper extends SocketWrapper {
 			return false;
 		}
 
-		System.out.println("Received packet: " + packet);
+		System.out.println("[ClientWrapper] Received packet: " + packet);
+		System.out.println("[ClientWrapper] Broadcast packet to local server");
+		if (!packet.getSender().equals(IDHandler.PROGRAMM_ID)) {
+			server.broadcastPacket(packet);
+		} else {
+			System.out.println("[ClientWrapper] Skipped packet to prevent packet loop");
+		}
 
 		return true;
 	}
@@ -41,5 +52,17 @@ public class NetworkClientSocketWrapper extends SocketWrapper {
 	protected void closeConnection() {
 		disconnectHandler.run();
 		super.closeConnection();
+	}
+
+	public void setLocalServer(NetworkServer server) {
+		this.server = server;
+	}
+
+	public NetworkServer getServer() {
+		return server;
+	}
+
+	public boolean isConnected() {
+		return connected;
 	}
 }

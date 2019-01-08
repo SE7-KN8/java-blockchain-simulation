@@ -2,15 +2,24 @@ package com.github.se7kn8.blockchain_simulation.network.client;
 
 import com.github.se7kn8.blockchain_simulation.command.CommandHandler;
 import com.github.se7kn8.blockchain_simulation.command.CommandSender;
+import com.github.se7kn8.blockchain_simulation.network.packages.TestPacket;
+import com.github.se7kn8.blockchain_simulation.network.server.NetworkServer;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 
+import java.net.InetSocketAddress;
+
 public class NetworkClient {
 
+	private NetworkServer localServer;
 	private NetworkClientSocketWrapper wrapper;
 	private boolean connected;
+
+	public NetworkClient(NetworkServer localServer) {
+		this.localServer = localServer;
+	}
 
 	public void registerCommands() {
 		CommandHandler.getInstance().registerCommand(LiteralArgumentBuilder.<CommandSender>literal("connect")
@@ -47,6 +56,14 @@ public class NetworkClient {
 					disconnected(c.getSource());
 					return 1;
 				}));
+		CommandHandler.getInstance().registerCommand(LiteralArgumentBuilder.<CommandSender>literal("send-test-packet-client").executes(c -> {
+			if (connected) {
+				wrapper.sendPacket(new TestPacket());
+			} else {
+				c.getSource().message("Not connect!");
+			}
+			return 1;
+		}));
 
 	}
 
@@ -55,7 +72,9 @@ public class NetworkClient {
 			if (wrapper == null) {
 				connected = true;
 				wrapper = new NetworkClientSocketWrapper(hostname, port, () -> connected = false);
-				System.out.println("Connected");
+				wrapper.setLocalServer(localServer);
+				localServer.setLocalClient(wrapper);
+				System.out.println("[Client] Connected");
 			} else {
 				throw new IllegalStateException("Connected is 'false' but the wrapper is not null. Try to restart the program");
 			}
@@ -70,7 +89,11 @@ public class NetworkClient {
 		} else {
 			wrapper.close();
 			wrapper = null;
+			localServer.setLocalClient(null);
 		}
 	}
 
+	public NetworkClientSocketWrapper getWrapper() {
+		return wrapper;
+	}
 }
