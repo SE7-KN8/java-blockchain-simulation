@@ -27,15 +27,16 @@ public class ServerClientHandler extends SocketWrapper {
 		if (!connected) {
 			return false;
 		}
-		//TODO just for tests
+
 		System.out.println("[ServerClientHandler] Received packet: " + packet);
+		server.getHandler().handlePacket(packet);
 		System.out.println("[ServerClientHandler] Broadcast packet " + packet.getClass() + " to all clients");
 		server.getConnectedClients().forEach(serverClientHandler -> {
 			if (serverClientHandler != this) {
 				serverClientHandler.sendPacket(packet);
 			}
 		});
-		if (!packet.getSender().equals(IDHandler.PROGRAMM_ID)) {
+		if (!packet.getSender().equals(IDHandler.PROGRAM_ID)) {
 			if (server.getLocalClient() != null && server.getLocalClient().isConnected()) {
 				System.out.println("[ServerClientHandler] Broadcast packet to local client");
 				server.getLocalClient().sendPacket(packet);

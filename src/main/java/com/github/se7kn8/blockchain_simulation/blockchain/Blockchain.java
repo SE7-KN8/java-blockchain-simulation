@@ -24,17 +24,13 @@ public class Blockchain {
 	private List<Block> blocks;
 	private int difficulty;
 
-	public Blockchain(int startDifficulty, String... genesisBlockData) {
+	public Blockchain(int startDifficulty) {
 		this.blocks = new ArrayList<>();
 		this.difficulty = startDifficulty;
-
-		Block block = new Block("", TextBlockData.createFromValues(genesisBlockData));
-		block.mineBlock(startDifficulty);
-		blocks.add(block);
 	}
 
-	public void addBlock(Block block, boolean isMined) {
-		if (!block.getPrevHash().equals(blocks.get(blocks.size() - 1).getHash())) {
+	public synchronized void addBlock(Block block, boolean isMined) {
+		if (blocks.size() != 0 && !block.getPrevHash().equals(blocks.get(blocks.size() - 1).getHash())) {
 			throw new WrongHashException("The block must contain the hash of the previous block");
 		}
 		if (!isMined) {
@@ -44,6 +40,13 @@ public class Blockchain {
 		validateBlockHash(block);
 
 		blocks.add(block);
+	}
+
+	public synchronized String getLastHash() {
+		if (blocks.size() > 0) {
+			return blocks.get(blocks.size() - 1).getHash();
+		}
+		return "";
 	}
 
 	public List<Block> getBlocks() {

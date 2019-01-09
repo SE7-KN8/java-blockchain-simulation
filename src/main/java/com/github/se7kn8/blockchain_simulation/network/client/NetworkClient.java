@@ -1,7 +1,11 @@
 package com.github.se7kn8.blockchain_simulation.network.client;
 
+import com.github.se7kn8.blockchain_simulation.blockchain.Blockchain;
+import com.github.se7kn8.blockchain_simulation.blockchain.TextBlockData;
 import com.github.se7kn8.blockchain_simulation.command.CommandHandler;
 import com.github.se7kn8.blockchain_simulation.command.CommandSender;
+import com.github.se7kn8.blockchain_simulation.network.NetworkHandler;
+import com.github.se7kn8.blockchain_simulation.network.packages.GenerateBlockPacket;
 import com.github.se7kn8.blockchain_simulation.network.packages.TestPacket;
 import com.github.se7kn8.blockchain_simulation.network.server.NetworkServer;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -16,9 +20,16 @@ public class NetworkClient {
 	private NetworkServer localServer;
 	private NetworkClientSocketWrapper wrapper;
 	private boolean connected;
+	private Blockchain blockchain;
+	private NetworkHandler handler;
 
-	public NetworkClient(NetworkServer localServer) {
+	public NetworkClient(NetworkServer localServer, Blockchain blockchain) {
 		this.localServer = localServer;
+		this.blockchain = blockchain;
+	}
+
+	public boolean isConnected() {
+		return connected;
 	}
 
 	public void registerCommands() {
@@ -32,7 +43,7 @@ public class NetworkClient {
 							//With default port
 							c.getSource().message("Connect to " + StringArgumentType.getString(c, "hostname") + " with default port");
 							try {
-								connect(StringArgumentType.getString(c, "hostname"), 7823, c.getSource());
+								connect(StringArgumentType.getString(c, "hostname"), 7890, c.getSource());
 							} catch (Exception e) {
 								c.getSource().message("Can't connect to server: " + e.getMessage());
 								e.printStackTrace();
@@ -64,6 +75,12 @@ public class NetworkClient {
 			}
 			return 1;
 		}));
+		CommandHandler.getInstance().registerCommand(LiteralArgumentBuilder.<CommandSender>literal("generate-block")
+				.then(RequiredArgumentBuilder.<CommandSender, String>argument("data", StringArgumentType.word()).executes(c -> {
+					String data = StringArgumentType.getString(c, "data");
+					addBlock(data);
+					return 1;
+				})));
 
 	}
 
@@ -73,6 +90,7 @@ public class NetworkClient {
 				connected = true;
 				wrapper = new NetworkClientSocketWrapper(hostname, port, () -> connected = false);
 				wrapper.setLocalServer(localServer);
+				wrapper.setHandler(handler);
 				localServer.setLocalClient(wrapper);
 				System.out.println("[Client] Connected");
 			} else {
@@ -95,5 +113,15 @@ public class NetworkClient {
 
 	public NetworkClientSocketWrapper getWrapper() {
 		return wrapper;
+	}
+
+	public void addBlock(String data) {
+		if (connected) {
+			wrapper.broadcastPacketToNetwork(new GenerateBlockPacket(blockchain.getDifficulty(), TextBlockData.createFromValues(data.split("\\+"))), true);
+		}
+	}
+
+	public void setHandler(NetworkHandler handler) {
+		this.handler = handler;
 	}
 }

@@ -3,17 +3,20 @@ package com.github.se7kn8.blockchain_simulation.blockchain;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
-public class Block {
+public class Block implements Serializable {
 
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss:SSS");
-	private static final HashFunction sha256 = Hashing.sha256();
-	private static final Random rand = new Random();
+	private static final long serialVersionUID = 1;
+	private transient static final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss:SSS");
+	private transient static final HashFunction sha256 = Hashing.sha256();
+	private transient static final Random rand = new Random();
 
 	//Header
 	private String hash;
@@ -79,5 +82,23 @@ public class Block {
 
 	public List<? extends BlockData> getBlockData() {
 		return List.copyOf(blockData);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Block block = (Block) o;
+		return nonce == block.nonce &&
+				Objects.equals(hash, block.hash) &&
+				Objects.equals(prevHash, block.prevHash) &&
+				Objects.equals(timestamp, block.timestamp) &&
+				Objects.equals(dataRootHash, block.dataRootHash) &&
+				Objects.equals(blockData, block.blockData);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(hash, prevHash, timestamp, nonce, dataRootHash, blockData);
 	}
 }

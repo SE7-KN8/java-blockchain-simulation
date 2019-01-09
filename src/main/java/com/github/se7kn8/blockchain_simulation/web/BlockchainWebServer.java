@@ -18,14 +18,10 @@ public class BlockchainWebServer {
 	private Javalin app;
 	private Blockchain blockchain;
 
-	public BlockchainWebServer(int wsPort) {
+	public BlockchainWebServer(int wsPort, Blockchain blockchain) {
 		this.app = Javalin.create();
 		this.app.port(wsPort);
-		this.blockchain = new Blockchain(4, "genesis", "block", "data");
-		//TODO just for tests
-		for (int i = 0; i < 39; i++) {
-			blockchain.addBlock(new Block(blockchain.getBlocks().get(blockchain.getBlocks().size() - 1).getHash(), TextBlockData.createFromValues("Block ", "data", "" + i)), false);
-		}
+		this.blockchain = blockchain;
 		CommandHandler.getInstance().addStopHandler("webserver", c -> {
 			c.message("Stopping webserver");
 			this.app.stop();

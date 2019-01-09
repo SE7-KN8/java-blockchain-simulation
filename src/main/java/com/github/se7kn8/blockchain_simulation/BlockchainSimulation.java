@@ -1,6 +1,8 @@
 package com.github.se7kn8.blockchain_simulation;
 
+import com.github.se7kn8.blockchain_simulation.blockchain.Blockchain;
 import com.github.se7kn8.blockchain_simulation.command.ConsoleReader;
+import com.github.se7kn8.blockchain_simulation.network.NetworkHandler;
 import com.github.se7kn8.blockchain_simulation.network.client.NetworkClient;
 import com.github.se7kn8.blockchain_simulation.network.server.NetworkServer;
 import com.github.se7kn8.blockchain_simulation.web.BlockchainWebServer;
@@ -29,10 +31,27 @@ public class BlockchainSimulation {
 		System.setProperty("org.slf4j.simpleLogger.logFile", "System.out");
 		ConsoleReader reader = new ConsoleReader(System.in);
 		reader.start();
-		BlockchainWebServer webServer = new BlockchainWebServer(wsPort);
+
+		Blockchain blockchain = new Blockchain(4);
+		// TODO just for tests
+		// for (int i = 0; i < 39; i++) {
+		// 	blockchain.addBlock(new Block(blockchain.getBlocks().get(blockchain.getBlocks().size() - 1).getHash(), TextBlockData.createFromValues("Block ", "data", "" + i)), false);
+		// }
+
+		BlockchainWebServer webServer = new BlockchainWebServer(wsPort, blockchain);
 		webServer.start();
 		NetworkServer localServer = new NetworkServer();
-		NetworkClient localClient = new NetworkClient(localServer);
+		NetworkClient localClient = new NetworkClient(localServer, blockchain);
+
+		NetworkHandler handler = new NetworkHandler(blockchain, packet -> {
+			if (localClient.isConnected()) {
+				localClient.getWrapper().broadcastPacketToNetwork(packet, true);
+			} else {
+				localServer.broadcastPacket(packet);
+			}
+		});
+		localClient.setHandler(handler);
+		localServer.setHandler(handler);
 
 		localClient.registerCommands();
 		localServer.registerCommands();

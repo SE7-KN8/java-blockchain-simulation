@@ -3,8 +3,8 @@ package com.github.se7kn8.blockchain_simulation.network.packages;
 public class ConnectPacket extends Packet {
 	private static final long serialVersionUID = 1;
 
-	private final int STATE;
-	private final String MESSAGE;
+	private final int state;
+	private final String message;
 
 	public transient static final int TRY_TO_CONNECT = 0;
 	public transient static final int SUCCESSFUL_CONNECTED = 1;
@@ -12,21 +12,21 @@ public class ConnectPacket extends Packet {
 
 
 	public ConnectPacket(int state) {
-		this.STATE = state;
-		this.MESSAGE = "";
+		this.state = state;
+		this.message = "";
 	}
 
 	public ConnectPacket(int state, String message) {
-		this.STATE = state;
-		this.MESSAGE = message;
+		this.state = state;
+		this.message = message;
 	}
 
 	public int getState() {
-		return STATE;
+		return state;
 	}
 
 	public String getMessage() {
-		return MESSAGE;
+		return message;
 	}
 
 	@Override

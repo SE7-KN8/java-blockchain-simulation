@@ -2,7 +2,9 @@ package com.github.se7kn8.blockchain_simulation;
 
 import com.github.se7kn8.blockchain_simulation.blockchain.Block;
 import com.github.se7kn8.blockchain_simulation.blockchain.Blockchain;
+import com.github.se7kn8.blockchain_simulation.blockchain.TextBlockData;
 import org.junit.jupiter.api.Test;
+import org.w3c.dom.Text;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,7 +24,8 @@ class BlockchainSimulationTest {
 
 	@Test
 	void testBlockchain() {
-		var blockchain = new Blockchain(2, "test_data_1", "test_data_2", "test_data_3");
+		var blockchain = new Blockchain(2);
+		blockchain.addBlock(new Block("", TextBlockData.createFromValues("test_data_1", "test_data_2", "test_data_3")), false);
 		assertEquals(2, blockchain.getDifficulty());
 		assertEquals(1, blockchain.getBlocks().size());
 		assertEquals(3, blockchain.getBlocks().get(0).getBlockData().size());
