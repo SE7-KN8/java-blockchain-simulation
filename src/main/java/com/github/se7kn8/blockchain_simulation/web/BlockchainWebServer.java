@@ -2,6 +2,7 @@ package com.github.se7kn8.blockchain_simulation.web;
 
 import com.github.se7kn8.blockchain_simulation.blockchain.Block;
 import com.github.se7kn8.blockchain_simulation.blockchain.Blockchain;
+import com.github.se7kn8.blockchain_simulation.blockchain.TextBlockData;
 import com.github.se7kn8.blockchain_simulation.command.CommandHandler;
 import io.javalin.Context;
 import io.javalin.Javalin;
@@ -11,7 +12,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.Collections;
-import java.util.List;
 
 public class BlockchainWebServer {
 
@@ -23,8 +23,8 @@ public class BlockchainWebServer {
 		this.app.port(wsPort);
 		this.blockchain = new Blockchain(4, "genesis", "block", "data");
 		//TODO just for tests
-		for (int i = 0; i < 40; i++) {
-			blockchain.addBlock(new Block(blockchain.getBlocks().get(blockchain.getBlocks().size() - 1).getHash(), List.of()), false);
+		for (int i = 0; i < 39; i++) {
+			blockchain.addBlock(new Block(blockchain.getBlocks().get(blockchain.getBlocks().size() - 1).getHash(), TextBlockData.createFromValues("Block ", "data", "" + i)), false);
 		}
 		CommandHandler.getInstance().addStopHandler("webserver", c -> {
 			c.message("Stopping webserver");
@@ -157,7 +157,8 @@ public class BlockchainWebServer {
 				.replace("<!-- __block_nonce__ -->", String.valueOf(block.getNonce()))
 				.replace("<!-- __block_timestamp__ -->", block.getTimestamp().toUpperCase())
 				.replace("<!-- __block_data_root_hash__ -->", block.getDataRootHash().toUpperCase())
-				.replace("<!-- __block_id__ -->", String.valueOf(blockID));
+				.replace("<!-- __block_id__ -->", String.valueOf(blockID))
+				.replace("<!-- __block_data__ -->", block.getBlockData().toString());
 	}
 
 	private void handle404(Context ctx) {

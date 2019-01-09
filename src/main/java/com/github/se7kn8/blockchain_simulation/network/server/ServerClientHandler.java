@@ -36,11 +36,9 @@ public class ServerClientHandler extends SocketWrapper {
 			}
 		});
 		if (!packet.getSender().equals(IDHandler.PROGRAMM_ID)) {
-			if (server.getLocalClient() != null) {
-				if (server.getLocalClient().isConnected()) {
-					System.out.println("[ServerClientHandler] Broadcast packet to local client");
-					server.getLocalClient().sendPacket(packet);
-				}
+			if (server.getLocalClient() != null && server.getLocalClient().isConnected()) {
+				System.out.println("[ServerClientHandler] Broadcast packet to local client");
+				server.getLocalClient().sendPacket(packet);
 			} else {
 				System.err.println("[ServerClientHandler] Can't broadcast packet to local client, because the client is not connect");
 			}
