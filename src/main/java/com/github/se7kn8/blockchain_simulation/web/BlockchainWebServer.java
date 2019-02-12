@@ -2,7 +2,6 @@ package com.github.se7kn8.blockchain_simulation.web;
 
 import com.github.se7kn8.blockchain_simulation.blockchain.Block;
 import com.github.se7kn8.blockchain_simulation.blockchain.Blockchain;
-import com.github.se7kn8.blockchain_simulation.blockchain.TextBlockData;
 import com.github.se7kn8.blockchain_simulation.command.CommandHandler;
 import io.javalin.Context;
 import io.javalin.Javalin;
@@ -10,6 +9,7 @@ import io.javalin.Javalin;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.util.Collections;
 
@@ -17,6 +17,10 @@ public class BlockchainWebServer {
 
 	private Javalin app;
 	private Blockchain blockchain;
+
+	private static class Data {
+		public String data;
+	}
 
 	public BlockchainWebServer(int wsPort, Blockchain blockchain) {
 		this.app = Javalin.create();
@@ -38,28 +42,20 @@ public class BlockchainWebServer {
 	}
 
 	private String getSite(String title, String contentPath) throws IOException, URISyntaxException {
-		var head = new Object() {
-			String head;
-		};
-		var header = new Object() {
-			String header;
-		};
-		var content = new Object() {
-			String content;
-		};
-		var footer = new Object() {
-			String footer;
-		};
+		Data head = new Data();
+		Data header = new Data();
+		Data content = new Data();
+		Data footer = new Data();
 
-		processResource("templates/head.html", path -> head.head = Files.readString(path));
-		processResource("templates/header.html", path -> header.header = Files.readString(path));
-		processResource("templates/footer.html", path -> footer.footer = Files.readString(path));
-		processResource(contentPath, path -> content.content = Files.readString(path));
+		processResource("templates/head.html", path -> head.data = readFile(path));
+		processResource("templates/header.html", path -> header.data = readFile(path));
+		processResource("templates/footer.html", path -> footer.data = readFile(path));
+		processResource(contentPath, path -> content.data = readFile(path));
 
-		return content.content
-				.replace("<!-- __footer__ -->", footer.footer)
-				.replace("<!-- __header__ -->", header.header)
-				.replace("<!-- __head__ -->", head.head)
+		return content.data
+				.replace("<!-- __footer__ -->", footer.data)
+				.replace("<!-- __header__ -->", header.data)
+				.replace("<!-- __head__ -->", head.data)
 				.replace("<!-- __title__ -->", title);
 	}
 
@@ -91,22 +87,23 @@ public class BlockchainWebServer {
 		}
 	}
 
+
 	private void blockchainEndpoint(Context ctx) throws IOException, URISyntaxException {
 		String html = getSite("Blockchain", "sites/blockchain.html");
 
 		int rows = (blockchain.getBlocks().size() % 4) > 0 ? (blockchain.getBlocks().size() / 4) + 1 : (blockchain.getBlocks().size() / 4);
-		var rowsHtml = new Object() {
-			String rows;
-		};
+		Data rowsHtml = new Data();
 
-		processResource("templates/block_row.html", path -> rowsHtml.rows = Files.readString(path));
+		processResource("templates/block_row.html", path -> rowsHtml.data = readFile(path));
 
-		rowsHtml.rows = rowsHtml.rows.repeat(rows);
+		StringBuilder stringBuilder = new StringBuilder();
+		for (int i = 0; i < rows; i++) {
+			stringBuilder.append(rowsHtml.data);
+		}
+		rowsHtml.data = stringBuilder.toString();
 
-		var blocksHtml = new Object() {
-			String blocks;
-		};
-		processResource("templates/block.html", path -> blocksHtml.blocks = Files.readString(path));
+		Data blocksHtml = new Data();
+		processResource("templates/block.html", path -> blocksHtml.data = readFile(path));
 
 		int block = 0;
 		for (int r = 0; r < rows; r++) {
@@ -115,14 +112,14 @@ public class BlockchainWebServer {
 				if (block >= blockchain.getBlocks().size()) {
 					break;
 				}
-				blocksBuilder.append(replaceBlockInfo(blocksHtml.blocks, block));
+				blocksBuilder.append(replaceBlockInfo(blocksHtml.data, block));
 
 				block++;
 			}
-			rowsHtml.rows = rowsHtml.rows.replaceFirst("<!-- __blocks__ -->", blocksBuilder.toString());
+			rowsHtml.data = rowsHtml.data.replaceFirst("<!-- __blocks__ -->", blocksBuilder.toString());
 		}
 
-		ctx.html(html.replace("<!-- __rows__ -->", rowsHtml.rows));
+		ctx.html(html.replace("<!-- __rows__ -->", rowsHtml.data));
 	}
 
 	private void blockInfoEndpoint(Context ctx) throws IOException, URISyntaxException {
@@ -171,6 +168,11 @@ public class BlockchainWebServer {
 		} catch (Exception e) {
 			throw new IllegalStateException("Error while creating 500 page", e);
 		}
+	}
+
+	private static String readFile(Path path) throws IOException {
+		byte[] encoded = Files.readAllBytes(path);
+		return new String(encoded, Charset.forName("UTF-8"));
 	}
 
 }

@@ -17,8 +17,8 @@ plugins {
 // Define the main class for the application
 mainClassName = 'com.github.se7kn8.blockchain_simulation.BlockchainSimulation'
 
-sourceCompatibility = 11
-targetCompatibility = 11
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 dependencies {
     implementation 'com.google.guava:guava:26.0-jre'

@@ -34,9 +34,10 @@ public class BlockchainSimulation {
 
 		Blockchain blockchain = new Blockchain(4);
 		// TODO just for tests
-		// for (int i = 0; i < 39; i++) {
-		// 	blockchain.addBlock(new Block(blockchain.getBlocks().get(blockchain.getBlocks().size() - 1).getHash(), TextBlockData.createFromValues("Block ", "data", "" + i)), false);
-		// }
+		//blockchain.addBlock(new Block("", new ArrayList<>()), false);
+		//for (int i = 0; i < 39; i++) {
+		//	blockchain.addBlock(new Block(blockchain.getBlocks().get(blockchain.getBlocks().size() - 1).getHash(), TextBlockData.createFromValues("Block ", "data", "" + i)), false);
+		//}
 
 		BlockchainWebServer webServer = new BlockchainWebServer(wsPort, blockchain);
 		webServer.start();

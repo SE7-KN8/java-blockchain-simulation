@@ -1,18 +1,17 @@
 package com.github.se7kn8.blockchain_simulation.blockchain;
 
+import com.github.se7kn8.blockchain_simulation.util.StringUtil;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 public class Block implements Serializable {
 
+	public static boolean showGenerationInfo = false;
 	private static final long serialVersionUID = 1;
 	private transient static final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy-HH:mm:ss:SSS");
 	private transient static final HashFunction sha256 = Hashing.sha256();
@@ -45,13 +44,21 @@ public class Block implements Serializable {
 	private String generateCurrentBlockHash(int difficulty) {
 		String currentBlockHash;
 
+		int hashCounter = 0;
 		while (true) {
 			String hash = sha256.hashString(prevHash + timestamp + nonce + dataRootHash, StandardCharsets.UTF_8).toString();
-			if (hash.startsWith("0".repeat(difficulty))) {
+			if (showGenerationInfo) {
+				System.out.println("[Block] Got hash: " + hash);
+			}
+			if (hash.startsWith(StringUtil.generateDifficultyString(difficulty))) {
 				currentBlockHash = hash;
+				if (showGenerationInfo) {
+					System.out.println("[Block] " + hashCounter + " iterations to got current hash");
+				}
 				break;
 			}
 			nonce = rand.nextInt();
+			hashCounter++;
 		}
 		return currentBlockHash;
 	}
@@ -81,7 +88,7 @@ public class Block implements Serializable {
 	}
 
 	public List<? extends BlockData> getBlockData() {
-		return List.copyOf(blockData);
+		return Collections.unmodifiableList(blockData);
 	}
 
 	@Override

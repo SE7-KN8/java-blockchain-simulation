@@ -8,6 +8,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class CommandTest {
 
+	private static class Data {
+		private boolean data;
+	}
+
 	private class TestCommandSender implements CommandSender {
 
 		private String lastMessage = "";
@@ -21,28 +25,17 @@ public class CommandTest {
 
 	@Test
 	void testStopHandler() throws Exception {
-
-		var test1 = new Object() {
-			boolean stopped = false;
-		};
-
-		var test2 = new Object() {
-			boolean stopped = false;
-		};
-
-		var test3 = new Object() {
-			boolean stopped = false;
-		};
-
-		var test4 = new Object() {
-			boolean stopped = false;
-		};
+		Data test1 = new Data();
+		Data test2 = new Data();
+		Data test3 = new Data();
+		Data test4 = new Data();
 
 
-		CommandHandler.getInstance().addStopHandler("web", s -> test1.stopped = true);
-		CommandHandler.getInstance().addStopHandler("data", s -> test2.stopped = true);
-		CommandHandler.getInstance().addStopHandler("gui", s -> test3.stopped = true);
-		CommandHandler.getInstance().addStopHandler("files", s -> test4.stopped = true);
+
+		CommandHandler.getInstance().addStopHandler("web", s -> test1.data = true);
+		CommandHandler.getInstance().addStopHandler("data", s -> test2.data = true);
+		CommandHandler.getInstance().addStopHandler("gui", s -> test3.data = true);
+		CommandHandler.getInstance().addStopHandler("files", s -> test4.data = true);
 
 		assertThrows(IllegalArgumentException.class, () -> {
 			CommandHandler.getInstance().addStopHandler("web", null);
@@ -51,23 +44,23 @@ public class CommandTest {
 		TestCommandSender sender = new TestCommandSender();
 
 		CommandHandler.getInstance().parseCommand("stop web", sender, true);
-		assertTrue(test1.stopped);
-		assertFalse(test2.stopped);
-		assertFalse(test3.stopped);
-		assertFalse(test4.stopped);
+		assertTrue(test1.data);
+		assertFalse(test2.data);
+		assertFalse(test3.data);
+		assertFalse(test4.data);
 
 
 		CommandHandler.getInstance().parseCommand("stop gui", sender, true);
-		assertTrue(test1.stopped);
-		assertFalse(test2.stopped);
-		assertTrue(test3.stopped);
-		assertFalse(test4.stopped);
+		assertTrue(test1.data);
+		assertFalse(test2.data);
+		assertTrue(test3.data);
+		assertFalse(test4.data);
 
 		CommandHandler.getInstance().parseCommand("stop all", sender, true);
-		assertTrue(test1.stopped);
-		assertTrue(test2.stopped);
-		assertTrue(test3.stopped);
-		assertTrue(test4.stopped);
+		assertTrue(test1.data);
+		assertTrue(test2.data);
+		assertTrue(test3.data);
+		assertTrue(test4.data);
 
 		CommandHandler.getInstance().parseCommand("stop", sender, true);
 		assertTrue(sender.lastMessage.contains("web"));

@@ -1,10 +1,12 @@
 package com.github.se7kn8.blockchain_simulation.blockchain;
 
+import com.github.se7kn8.blockchain_simulation.util.StringUtil;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Blockchain {
@@ -50,7 +52,7 @@ public class Blockchain {
 	}
 
 	public List<Block> getBlocks() {
-		return List.copyOf(blocks);
+		return Collections.unmodifiableList(blocks);
 	}
 
 	public int getDifficulty() {
@@ -62,7 +64,7 @@ public class Blockchain {
 			if (i == 0) {
 				continue;
 			}
-			var block = blocks.get(i);
+			Block block = blocks.get(i);
 			try {
 				validateBlockHash(block);
 			} catch (WrongHashException e) {
@@ -76,8 +78,8 @@ public class Blockchain {
 	}
 
 	private void validateBlockHash(Block block) {
-		if (!block.getHash().startsWith("0".repeat(difficulty))) {
-			throw new WrongHashException("Hash has to start with: " + "0".repeat(difficulty));
+		if (!block.getHash().startsWith(StringUtil.generateDifficultyString(difficulty))) {
+			throw new WrongHashException("Hash has to start with: " + StringUtil.generateDifficultyString(difficulty));
 		} else if (!block.getHash().equals(sha256.hashString(block.getPrevHash() + block.getTimestamp() + block.getNonce() + block.getDataRootHash(), StandardCharsets.UTF_8).toString())) { //TODO validate data root hash
 			throw new WrongHashException("Hash does not match block values");
 		}

@@ -49,7 +49,6 @@ public abstract class SocketWrapper implements Closeable {
 						SocketWrapper.this.sendPacket(new ConnectPacket(ConnectPacket.CONNECTION_TERMINATED, "Invalid packet or invalid packet state!"));
 
 						while (!SocketWrapper.this.getSocket().isClosed() && SocketWrapper.this.getPacketsToSend().peek() == null && !SocketWrapper.this.outputThread.isInterrupted()) {
-							Thread.onSpinWait();
 						}
 						closeConnection();
 
