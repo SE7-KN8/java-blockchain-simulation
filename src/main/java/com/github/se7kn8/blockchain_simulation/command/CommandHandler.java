@@ -1,8 +1,10 @@
 package com.github.se7kn8.blockchain_simulation.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestion;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +28,9 @@ public class CommandHandler {
 		dispatcher = new CommandDispatcher<>();
 		dispatcher.register(LiteralArgumentBuilder.<CommandSender>literal("info").executes(c -> {
 			c.getSource().message("Project name: java-blockchain-simulation");
+			for (String command : dispatcher.getAllUsage(dispatcher.getRoot(), c.getSource(), false)) {
+				c.getSource().message("Command: " + command);
+			}
 			return 1;
 		}));
 		dispatcher.register(LiteralArgumentBuilder.<CommandSender>literal("stop").executes(c -> {
@@ -84,10 +89,14 @@ public class CommandHandler {
 	public void parseCommand(String command, CommandSender sender, boolean executeOnCurrentThread) {
 
 		Runnable commandRunnable = () -> {
+			ParseResults<CommandSender> result = dispatcher.parse(command, sender);
 			try {
-				dispatcher.execute(command, sender);
+				dispatcher.execute(result);
 			} catch (CommandSyntaxException e) {
 				sender.message("Error while executing command: " + e.getMessage());
+				for (Suggestion suggestion : dispatcher.getCompletionSuggestions(result).join().getList()) {
+					sender.message("Suggestion: " + suggestion.getText());
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
