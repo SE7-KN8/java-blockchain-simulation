@@ -24,6 +24,7 @@ public class BlockchainWebServer {
 
 	public BlockchainWebServer(int wsPort, Blockchain blockchain) {
 		this.app = Javalin.create();
+		this.app.disableStartupBanner();
 		this.app.port(wsPort);
 		this.blockchain = blockchain;
 		CommandHandler.getInstance().addStopHandler("webserver", c -> {

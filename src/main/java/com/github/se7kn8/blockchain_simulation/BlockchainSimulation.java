@@ -5,6 +5,7 @@ import com.github.se7kn8.blockchain_simulation.command.ConsoleReader;
 import com.github.se7kn8.blockchain_simulation.network.NetworkHandler;
 import com.github.se7kn8.blockchain_simulation.network.client.NetworkClient;
 import com.github.se7kn8.blockchain_simulation.network.server.NetworkServer;
+import com.github.se7kn8.blockchain_simulation.util.IDHandler;
 import com.github.se7kn8.blockchain_simulation.web.BlockchainWebServer;
 
 public class BlockchainSimulation {
@@ -31,6 +32,8 @@ public class BlockchainSimulation {
 		System.setProperty("org.slf4j.simpleLogger.logFile", "System.out");
 		ConsoleReader reader = new ConsoleReader(System.in);
 		reader.start();
+
+		System.out.println("[Info] Current random id is: " + IDHandler.PROGRAM_ID.toString());
 
 		Blockchain blockchain = new Blockchain(4);
 		// TODO just for tests

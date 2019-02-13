@@ -32,19 +32,6 @@ public class NetworkServer extends IOThread {
 			serverThread = new Thread(this);
 			serverThread.setName("Server thread");
 			serverThread.start();
-
-			new Thread(() -> {
-				try {
-					while (true) {
-						NetworkServer.this.broadcastPacket(new TestPacket());
-						Thread.sleep(1000);
-					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-
-			})/*.start()*/;
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

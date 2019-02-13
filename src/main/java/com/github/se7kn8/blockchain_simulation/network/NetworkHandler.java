@@ -8,6 +8,7 @@ import com.github.se7kn8.blockchain_simulation.network.packages.Packet;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Consumer;
 
 public class NetworkHandler {
@@ -30,17 +31,19 @@ public class NetworkHandler {
 	}
 
 	public void handleGenerateBlockPacket(Packet p) {
+
 		if (p instanceof GenerateBlockPacket /*Should always be true*/) {
 			GenerateBlockPacket packet = ((GenerateBlockPacket) p);
 			new Thread(() -> {
 				Block block = new Block(blockchain.getLastHash(), packet.getBlockData());
 				System.out.println("[NetworkHandler] Generating block on thread: " + Thread.currentThread().getName());
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(new Random().nextInt(8000) + 2000); //Just to save the cpu
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				block.mineBlock(packet.getDifficulty());
+				handleAddBlockPacket(new AddBlockPacket(block));//Simulate: blockchain.addBlock(block, true); equal to local broadcast
 				sendPacketSynced(new AddBlockPacket(block));
 			}).start();
 		}
@@ -51,12 +54,15 @@ public class NetworkHandler {
 			AddBlockPacket packet = ((AddBlockPacket) p);
 			new Thread(() -> {
 				try {
-					if (blockchain.getBlocks().contains(packet.getBlock())) {
-						System.out.println("[NetworkHandler] Skipped already existing block!");
-						return;
+					for (Block block : blockchain.getBlocks()) {
+						if (block.getPrevHash().equals(packet.getBlock().getPrevHash())) {
+							System.out.println("[NetworkHandler] Skipped already existing block!");
+							return;
+						}
 					}
 					blockchain.addBlock(packet.getBlock(), true);
-					System.out.println("Successful added block to blockchain!");
+					System.out.println("Sender: " + p.getSender());
+					System.out.println("[NetworkHandler] Successful added block to blockchain!");
 				} catch (Blockchain.WrongHashException e) {
 					throw new RuntimeException("[NetworkHandler] Can't add block, hash is invalid:", e);
 				}
