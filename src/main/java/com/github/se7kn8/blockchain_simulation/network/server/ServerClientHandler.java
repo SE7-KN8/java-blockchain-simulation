@@ -28,17 +28,21 @@ public class ServerClientHandler extends SocketWrapper {
 			return false;
 		}
 
+
+		//TODO fix bug --- when the local client is connect to the same local server and it gets a packet from outside it will end in a packet loop
 		System.out.println("[ServerClientHandler] Received packet: " + packet);
 		server.getHandler().handlePacket(packet);
 		System.out.println("[ServerClientHandler] Broadcast packet " + packet.getClass() + " to all clients");
 		server.getConnectedClients().forEach(serverClientHandler -> {
 			if (serverClientHandler != this) {
+				// TODO cause this will loop, because packet id is not equal to the program id
 				serverClientHandler.sendPacket(packet);
 			}
 		});
 		if (!packet.getSender().equals(IDHandler.PROGRAM_ID)) {
 			if (server.getLocalClient() != null && server.getLocalClient().isConnected()) {
 				System.out.println("[ServerClientHandler] Broadcast packet to local client");
+				// TODO and this will loop, because packet id is not equal to the program id
 				server.getLocalClient().sendPacket(packet);
 			} else {
 				System.err.println("[ServerClientHandler] Can't broadcast packet to local client, because the client is not connect");

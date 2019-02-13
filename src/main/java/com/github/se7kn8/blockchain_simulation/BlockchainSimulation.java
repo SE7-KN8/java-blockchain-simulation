@@ -2,7 +2,7 @@ package com.github.se7kn8.blockchain_simulation;
 
 import com.github.se7kn8.blockchain_simulation.blockchain.Blockchain;
 import com.github.se7kn8.blockchain_simulation.command.ConsoleReader;
-import com.github.se7kn8.blockchain_simulation.network.NetworkHandler;
+import com.github.se7kn8.blockchain_simulation.network.SharedNetworkHandler;
 import com.github.se7kn8.blockchain_simulation.network.client.NetworkClient;
 import com.github.se7kn8.blockchain_simulation.network.server.NetworkServer;
 import com.github.se7kn8.blockchain_simulation.util.IDHandler;
@@ -47,7 +47,7 @@ public class BlockchainSimulation {
 		NetworkServer localServer = new NetworkServer();
 		NetworkClient localClient = new NetworkClient(localServer, blockchain);
 
-		NetworkHandler handler = new NetworkHandler(blockchain, packet -> {
+		SharedNetworkHandler handler = new SharedNetworkHandler(blockchain, packet -> {
 			if (localClient.isConnected()) {
 				localClient.getWrapper().broadcastPacketToNetwork(packet, true);
 			} else {

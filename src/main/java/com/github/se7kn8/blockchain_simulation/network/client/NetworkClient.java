@@ -4,7 +4,7 @@ import com.github.se7kn8.blockchain_simulation.blockchain.Blockchain;
 import com.github.se7kn8.blockchain_simulation.blockchain.TextBlockData;
 import com.github.se7kn8.blockchain_simulation.command.CommandHandler;
 import com.github.se7kn8.blockchain_simulation.command.CommandSender;
-import com.github.se7kn8.blockchain_simulation.network.NetworkHandler;
+import com.github.se7kn8.blockchain_simulation.network.SharedNetworkHandler;
 import com.github.se7kn8.blockchain_simulation.network.packages.GenerateBlockPacket;
 import com.github.se7kn8.blockchain_simulation.network.packages.TestPacket;
 import com.github.se7kn8.blockchain_simulation.network.server.NetworkServer;
@@ -13,15 +13,13 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 
-import java.net.InetSocketAddress;
-
 public class NetworkClient {
 
 	private NetworkServer localServer;
 	private NetworkClientSocketWrapper wrapper;
 	private boolean connected;
 	private Blockchain blockchain;
-	private NetworkHandler handler;
+	private SharedNetworkHandler handler;
 
 	public NetworkClient(NetworkServer localServer, Blockchain blockchain) {
 		this.localServer = localServer;
@@ -121,7 +119,7 @@ public class NetworkClient {
 		}
 	}
 
-	public void setHandler(NetworkHandler handler) {
+	public void setHandler(SharedNetworkHandler handler) {
 		this.handler = handler;
 	}
 }

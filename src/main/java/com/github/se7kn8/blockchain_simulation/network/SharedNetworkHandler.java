@@ -11,13 +11,13 @@ import java.util.Map;
 import java.util.Random;
 import java.util.function.Consumer;
 
-public class NetworkHandler {
+public class SharedNetworkHandler {
 
 	private Map<Class<? extends Packet>, Consumer<Packet>> customPacketHandlers = new HashMap<>();
 	private Blockchain blockchain;
 	private Consumer<Packet> packetSender;
 
-	public NetworkHandler(Blockchain blockchain, Consumer<Packet> packetSender) {
+	public SharedNetworkHandler(Blockchain blockchain, Consumer<Packet> packetSender) {
 		customPacketHandlers.put(GenerateBlockPacket.class, this::handleGenerateBlockPacket);
 		customPacketHandlers.put(AddBlockPacket.class, this::handleAddBlockPacket);
 		this.blockchain = blockchain;
@@ -26,8 +26,8 @@ public class NetworkHandler {
 
 	public void handlePacket(Packet packet) {
 
-		System.out.println("[NetworkHandler] Handle packet: " + packet.getClass().getSimpleName());
-		customPacketHandlers.getOrDefault(packet.getClass(), p -> System.out.println("[NetworkHandler] No handler found for packet: " + p.getClass().getSimpleName())).accept(packet);
+		System.out.println("[SharedNetworkHandler] Handle packet: " + packet.getClass().getSimpleName());
+		customPacketHandlers.getOrDefault(packet.getClass(), p -> System.out.println("[SharedNetworkHandler] No handler found for packet: " + p.getClass().getSimpleName())).accept(packet);
 	}
 
 	public void handleGenerateBlockPacket(Packet p) {
@@ -36,7 +36,7 @@ public class NetworkHandler {
 			GenerateBlockPacket packet = ((GenerateBlockPacket) p);
 			new Thread(() -> {
 				Block block = new Block(blockchain.getLastHash(), packet.getBlockData());
-				System.out.println("[NetworkHandler] Generating block on thread: " + Thread.currentThread().getName());
+				System.out.println("[SharedNetworkHandler] Generating block on thread: " + Thread.currentThread().getName());
 				try {
 					Thread.sleep(new Random().nextInt(8000) + 2000); //Just to save the cpu
 				} catch (Exception e) {
@@ -56,15 +56,15 @@ public class NetworkHandler {
 				try {
 					for (Block block : blockchain.getBlocks()) {
 						if (block.getPrevHash().equals(packet.getBlock().getPrevHash())) {
-							System.out.println("[NetworkHandler] Skipped already existing block!");
+							System.out.println("[SharedNetworkHandler] Skipped already existing block!");
 							return;
 						}
 					}
 					blockchain.addBlock(packet.getBlock(), true);
 					System.out.println("Sender: " + p.getSender());
-					System.out.println("[NetworkHandler] Successful added block to blockchain!");
+					System.out.println("[SharedNetworkHandler] Successful added block to blockchain!");
 				} catch (Blockchain.WrongHashException e) {
-					throw new RuntimeException("[NetworkHandler] Can't add block, hash is invalid:", e);
+					throw new RuntimeException("[SharedNetworkHandler] Can't add block, hash is invalid:", e);
 				}
 			}).start();
 		}

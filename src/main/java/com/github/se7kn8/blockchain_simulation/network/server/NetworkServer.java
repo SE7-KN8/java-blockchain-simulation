@@ -2,7 +2,7 @@ package com.github.se7kn8.blockchain_simulation.network.server;
 
 import com.github.se7kn8.blockchain_simulation.command.CommandHandler;
 import com.github.se7kn8.blockchain_simulation.command.CommandSender;
-import com.github.se7kn8.blockchain_simulation.network.NetworkHandler;
+import com.github.se7kn8.blockchain_simulation.network.SharedNetworkHandler;
 import com.github.se7kn8.blockchain_simulation.network.client.NetworkClientSocketWrapper;
 import com.github.se7kn8.blockchain_simulation.network.packages.Packet;
 import com.github.se7kn8.blockchain_simulation.network.packages.TestPacket;
@@ -21,7 +21,7 @@ public class NetworkServer extends IOThread {
 	private ServerSocket socket;
 	private Thread serverThread;
 	private NetworkClientSocketWrapper localClient;
-	private NetworkHandler handler;
+	private SharedNetworkHandler handler;
 	private Set<ServerClientHandler> connectedClients = new HashSet<>();
 
 	private Executor executor = Executors.newCachedThreadPool();
@@ -93,11 +93,11 @@ public class NetworkServer extends IOThread {
 		return localClient;
 	}
 
-	public void setHandler(NetworkHandler handler) {
+	public void setHandler(SharedNetworkHandler handler) {
 		this.handler = handler;
 	}
 
-	public NetworkHandler getHandler() {
+	public SharedNetworkHandler getHandler() {
 		return handler;
 	}
 }
